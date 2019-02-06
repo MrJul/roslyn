@@ -2537,13 +2537,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal static bool CheckRestrictedTypeInAsync(Symbol containingSymbol, TypeSymbol type, DiagnosticBag diagnostics, SyntaxNode syntax)
         {
-            if (containingSymbol.Kind == SymbolKind.Method
-                && ((MethodSymbol)containingSymbol).IsAsync
-                && type.IsRestrictedType())
-            {
-                Error(diagnostics, ErrorCode.ERR_BadSpecialByRefLocal, syntax, type);
-                return true;
-            }
             return false;
         }
 

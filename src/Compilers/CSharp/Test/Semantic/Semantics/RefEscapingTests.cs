@@ -3618,5 +3618,54 @@ class C
                 Diagnostic(ErrorCode.ERR_EscapeLocal, "x").WithArguments("x").WithLocation(8, 24)
                 );
         }
+
+        [Fact]
+        public void AwaitRefStructNotHoisted()
+        {
+            CreateCompilation(@"
+using System.Threading.Tasks;
+
+ref struct S { }
+
+class C
+{
+    async Task M(Task t)
+    {
+        var s = new S();
+        M(s, ref s);
+        await t;
+    }
+
+    void M(S s1, ref S s2)
+    {
+    }
+}", options: TestOptions.ReleaseDll).VerifyEmitDiagnostics();
+        }
+
+        [Fact]
+        public void AwaitRefStructHoisted()
+        {
+            CreateCompilation(@"
+using System.Threading.Tasks;
+
+ref struct S { }
+
+class C
+{
+    async Task M(Task t)
+    {
+        var s = new S();
+        await t;
+        M(s);
+    }
+
+    void M(S s)
+    {
+    }
+}", options: TestOptions.ReleaseDll).VerifyEmitDiagnostics(
+                // (12,11): error CS4013: Instance of type 'S' cannot be used inside a nested function, query expression, iterator block or async method
+                //         M(s);
+                Diagnostic(ErrorCode.ERR_SpecialByRefInLambda, "s").WithArguments("S").WithLocation(12, 11));
+        }
     }
 }
